@@ -76,7 +76,7 @@ cd /lus/theta-fs0/projects/AD_Brain_Imaging/anal/adni/fs/\${SUBJECT}/dmri2
 
 
 
-  tcksift -act 5tt2_upsample125.mif.gz \
+  time tcksift -act 5tt2_upsample125.mif.gz \
     mr_track_20M2_${s}_upsample125.tck \
     WM_FODs_upsample125.mif.gz \
     mr_track_10M_SIFT2_${s}_upsample125.tck \
