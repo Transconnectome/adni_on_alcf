@@ -41,7 +41,7 @@ workingdir=/lus/theta-fs0/projects/AD_Brain_Imaging/anal/adni/fs/${SUBJECT}/dmri
 echo \$workingdir
 cd \$workingdir
 pwd
-ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=128
+ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=$threads
 echo beginning of the code \`date +"%Y-%m-%d/%H:%M:%S"\`
 
 
@@ -56,37 +56,40 @@ echo now ready for tckgen \`date +"%Y-%m-%d/%H:%M:%S"\`
 
 echo resizing WM_FODs.mif.gz, nodes_aparc+aseg2 nodes_aparc.a2009s+aseg2
 mrresize WM_FODs.mif.gz -voxel 1.25 WM_FODs_upsample125.mif.gz \
-     	-force -interp sinc -nthreads 128 
+     	-force -interp sinc -nthreads $threads
+
 mrresize nodes_aparc+aseg2.mif.gz -voxel 1.25 nodes_aparc+aseg2_upsample125.mif.gz \
-        -force -interp sinc -nthreads 128
+        -force -interp sinc -nthreads $threads
+
 mrresize nodes_aparc.a2009s+aseg2.mif.gz -voxel 1.25 nodes_aparc.a2009s+aseg2_upsample125.mif.gz \
-        -force -interp sinc -nthreads 128
+        -force -interp sinc -nthreads $threads
+
 mrresize 5tt2.mif.gz -voxel 1.25 5tt2_upsample125.mif.gz \
-        -force -interp sinc -nthreads 128
+        -force -interp sinc -nthreads $threads
 
-  tckgen WM_FODs_upsample125.mif.gz  mr_track_20M2_${s}_upsample125.tck -act 5tt2_upsample125.mif.gz -backtrack -crop_at_gmwmi -seed_dynamic WM_FODs_upsample125.mif.gz -angle 22.5 -maxlength 250 -minlength 10 -power 1.0 -select 20M -force -nthreads 128
+  tckgen WM_FODs_upsample125.mif.gz  mr_track_20M2_${s}_upsample125.tck -act 5tt2_upsample125.mif.gz -backtrack -crop_at_gmwmi -seed_dynamic WM_FODs_upsample125.mif.gz -angle 22.5 -maxlength 250 -minlength 10 -power 1.0 -select 20M -force -nthreads $threads
   sleep 0.2
-  
-  tcksift -act 5tt2_upsample125.mif.gz mr_track_20M2_${s}_upsample125.tck WM_FODs_upsample125.mif.gz mr_track_10M_SIFT2_${s}_upsample125.tck -term_number 10M -force -nthreads 128 && echo 'sift done'*******
-  sleep 0.2
- 
-  echo 'sift done'*******
- 
 
-for im in aparc+aseg aparc.a2009s+aseg
-do
-#1.count
-tck2connectome -force -zero_diagonal -nthreads ${threads} \
-            mr_track_10M_SIFT2_${s}_upsample125.tck \    
-            nodes_\${im}2_upsample125.mif.gz \
-            mr_connectome_sift_10M_\${im}_upsample125_count.csv
+#  tcksift -act 5tt2_upsample125.mif.gz mr_track_20M2_${s}_upsample125.tck WM_FODs_upsample125.mif.gz mr_track_10M_SIFT2_${s}_upsample125.tck -term_number 10M -force -nthreads $threads && echo 'sift done'*******
+#  sleep 0.2
 
-#2.length
-tck2connectome -force -zero_diagonal -scale_length -stat_edge mean \
-  mr_track_10M_SIFT2_${s}_upsample125.tck nodes_\${im}2_upsample125.mif.gz  \
-  mr_connectome_sift_10M_\${im}_upsample125_length.csv -nthreads ${threads} 
+#  echo 'sift done'*******
 
-done
+
+#for im in aparc+aseg aparc.a2009s+aseg
+#do
+##1.count
+#tck2connectome -force -zero_diagonal -nthreads ${threads} \
+#            mr_track_10M_SIFT2_${s}_upsample125.tck \
+#            nodes_\${im}2_upsample125.mif.gz \
+#            mr_connectome_sift_10M_\${im}_upsample125_count.csv
+
+##2.length
+#tck2connectome -force -zero_diagonal -scale_length -stat_edge mean \
+#  mr_track_10M_SIFT2_${s}_upsample125.tck nodes_\${im}2_upsample125.mif.gz  \
+#  mr_connectome_sift_10M_\${im}_upsample125_length.csv -nthreads ${threads}
+
+#done
 
 #############################################################MRTRIX########################
 EOF
@@ -96,7 +99,7 @@ chmod +x $CMD
 
 
 
-echo "aprun -n 1 -N 1 -d 256 -j 4 -cc depth -e OMP_NUM_THREADS=256 $CMD > ./job/log.tckgen.${SUBJECT} 2>&1 &">>$CMD_batch 
+echo "aprun -n 1 -N 1 -d 256 -j 4 -cc depth -e OMP_NUM_THREADS=256 $CMD > ./job/log.tckgen.${SUBJECT} 2>&1 &">>$CMD_batch
 echo "sleep 3">>$CMD_batch
 i=$(($i+1))
 echo $i
